@@ -1,78 +1,63 @@
 import sender_stand_request
 import data
 
-# Obtener token de un nuevo usuario
+# Crear un kit body dinámicamente con nombre
+def get_kit_body(name):
+    return {"name": name}
+
+# Obtener authToken creando un nuevo usuario
 def get_new_user_token():
-    response = sender_stand_request.post_new_user(data.user_body.copy())
+    response = sender_stand_request.post_new_user(data.user_body)
     return response.json()["authToken"]
 
-# Generar cuerpo del kit con nombre personalizado
-def get_kit_body(name):
-    kit_body = data.kit_body.copy()
-    kit_body["name"] = name
-    return kit_body
-
-# Afirmación positiva (espera código 201 y validación de nombre)
+# Prueba positiva
 def positive_assert(kit_body):
-    auth_token = get_new_user_token()
-    response = sender_stand_request.post_new_client_kit(kit_body, auth_token)
+    token = get_new_user_token()
+    response = sender_stand_request.post_new_client_kit(kit_body, token)
 
     assert response.status_code == 201
     assert response.json()["name"] == kit_body["name"]
 
-# Afirmación negativa (espera código 400)
+# Prueba negativa para código 400
 def negative_assert_code_400(kit_body):
-    auth_token = get_new_user_token()
-    response = sender_stand_request.post_new_client_kit(kit_body, auth_token)
+    token = get_new_user_token()
+    response = sender_stand_request.post_new_client_kit(kit_body, token)
 
     assert response.status_code == 400
+    assert response.json()["code"] == 400
 
-# Test 1: Nombre con 1 carácter
-def test_kit_name_min_length():
-    kit_body = get_kit_body("a")
-    positive_assert(kit_body)
+# Prueba 1: 1 carácter permitido
+def test_kit_name_one_letter():
+    positive_assert(get_kit_body(data.one_letter_name))
 
-# Test 2: Nombre con 511 caracteres
+# Prueba 2: 511 caracteres
 def test_kit_name_511_characters():
-    kit_body = {
-        "name": "AbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdAbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabC"
-    }
-    positive_assert(kit_body)
+    positive_assert(get_kit_body(data.characters_511_name))
 
-# Test 3: Nombre vacío
-def test_kit_name_zero_length():
-    kit_body = get_kit_body("")
-    negative_assert_code_400(kit_body)
+# Prueba 3: 0 caracteres
+def test_kit_name_empty_string():
+    negative_assert_code_400(get_kit_body(data.empty_name))
 
-# Test 4: Nombre con más de 512 caracteres
+# Prueba 4: 512 caracteres
 def test_kit_name_512_characters():
-    kit_body = {
-        "name": "AbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdAbcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcD"
-    }
-    negative_assert_code_400(kit_body)
+    negative_assert_code_400(get_kit_body(data.characters_512_name))
 
-# Test 5: Nombre con caracteres especiales
-def test_kit_name_with_special_characters():
-    kit_body = get_kit_body("№%@")
-    positive_assert(kit_body)
+# Prueba 5: Caracteres especiales permitidos
+def test_kit_name_special_chars():
+    positive_assert(get_kit_body(data.special_char_name))
 
-# Test 6: Nombre con espacios
-def test_kit_name_with_spaces():
-    kit_body = get_kit_body(" A Aaa ")
-    positive_assert(kit_body)
+# Prueba 6: Espacios permitidos
+def test_kit_name_spaces():
+    positive_assert(get_kit_body(data.name_with_spaces))
 
-# Test 7: Nombre con números
-def test_kit_name_with_numbers():
-    kit_body = get_kit_body("123")
-    positive_assert(kit_body)
+# Prueba 7: Números permitidos
+def test_kit_name_numbers():
+    positive_assert(get_kit_body(data.numeric_name))
 
-# Test 8: Falta el parámetro name
-def test_kit_name_missing():
-    kit_body = data.kit_body.copy()
-    kit_body.pop("name")
-    negative_assert_code_400(kit_body)
+# Prueba 8: No se pasa "name"
+def test_kit_name_missing_param():
+    negative_assert_code_400(data.kit_body_without_name)
 
-# Test 9: Tipo incorrecto - número en lugar de string
-def test_kit_name_number_type():
-    kit_body = get_kit_body(123)
-    negative_assert_code_400(kit_body)
+# Prueba 9: Tipo incorrecto (número en vez de string)
+def test_kit_name_invalid_type():
+    negative_assert_code_400(get_kit_body(data.numeric_type_name))
