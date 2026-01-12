@@ -1,5 +1,5 @@
-Proyecto Urban Grocers
-Aldo Tablas Ramírez Sprint No. 7 Grupo 29
+Bootcamp TripleTen-QA Proyecto Urban Grocers
+Aldo Tablas Ramírez 
 
 -Descripcón del proyecto
 Este proyecto contiene pruebas automatizadas para verificar la validez del campo `name`
